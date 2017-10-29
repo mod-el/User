@@ -38,7 +38,10 @@ class User extends Module{
 
 		if(!$this->model->isCLI())
 			$this->cookieLogin();
-		$this->checkMandatory();
+
+		$this->model->on('Core_controllerFound', function($data){
+			$this->checkMandatory($data['controller']);
+		});
 	}
 
 	/**
@@ -182,9 +185,9 @@ class User extends Module{
 	}
 
 	/**
-	 *
+	 * @param string $controllerName
 	 */
-	private function checkMandatory(){
+	private function checkMandatory($controllerName){
 		if($this->logged())
 			return;
 
@@ -192,7 +195,7 @@ class User extends Module{
 		$except[] = $this->options['login-controller'];
 		$except[] = 'Zk';
 
-		if($this->options['mandatory'] and !in_array($this->model->controllerName, $except)){
+		if($this->options['mandatory'] and !in_array($controllerName, $except)){
 			$redirect = $this->model->prefix().implode('/', $this->model->getRequest());
 			if(!$this->model->isCLI())
 				$redirect = urlencode($redirect);

@@ -41,7 +41,7 @@ class User extends Module{
 
 		$this->model->on('Core_controllerFound', function($data){
 			$this->checkMandatory($data['controller']);
-		});
+		}, true);
 	}
 
 	/**

@@ -1,9 +1,10 @@
-<?php
-namespace Model;
+<?php namespace Model\User;
+
+use Model\Core\Module;
 
 class User extends Module{
 	/** @var array */
-	public $options = array();
+	public $options = [];
 
 	/**
 	 * @param array|string $options

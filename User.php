@@ -196,6 +196,9 @@ class User extends Module{
 		$except[] = $this->options['login-controller'];
 		$except[] = 'Zk';
 
+		$controllerName = explode('\\', $controllerName);
+		$controllerName = end($controllerName);
+
 		if($this->options['mandatory'] and !in_array($controllerName, $except)){
 			$redirect = $this->model->prefix().implode('/', $this->model->getRequest());
 			if(!$this->model->isCLI())

@@ -9,7 +9,7 @@ class User extends Module{
 	/**
 	 * @param array|string $options
 	 */
-	public function init($options){
+	public function init(array $options){
 		if(!is_array($options)) {
 			$options = [
 				'table' => $options,

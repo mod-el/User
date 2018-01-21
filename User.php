@@ -2,15 +2,17 @@
 
 use Model\Core\Module;
 
-class User extends Module{
+class User extends Module
+{
 	/** @var array */
 	public $options = [];
 
 	/**
 	 * @param array|string $options
 	 */
-	public function init(array $options){
-		if(!is_array($options)) {
+	public function init(array $options)
+	{
+		if (!is_array($options)) {
 			$options = [
 				'table' => $options,
 			];
@@ -21,11 +23,11 @@ class User extends Module{
 			'primary' => 'id',
 			'username' => 'username',
 			'password' => 'password',
-			'filters' =>  [],
+			'filters' => [],
 			'mandatory' => false,
 			'except' => [],
 			'login-controller' => 'Login',
-			'crypt-function' => function($pass){
+			'crypt-function' => function ($pass) {
 				return sha1(md5($pass));
 			},
 		], $options);
@@ -37,10 +39,10 @@ class User extends Module{
 			'logged',
 		];
 
-		if(!$this->model->isCLI())
+		if (!$this->model->isCLI())
 			$this->cookieLogin();
 
-		$this->model->on('Core_controllerFound', function($data){
+		$this->model->on('Core_controllerFound', function ($data) {
 			$this->checkMandatory($data['controller']);
 		}, true);
 	}
@@ -52,8 +54,9 @@ class User extends Module{
 	 * @param array $filters
 	 * @return bool|int
 	 */
-	public function login($username, $password, $remember=true, $filters=array()){
-		if($this->options['table']===false)
+	public function login(string $username, string $password, bool $remember = true, array $filters = [])
+	{
+		if ($this->options['table'] === false)
 			return false;
 		$this->logout();
 
@@ -63,9 +66,9 @@ class User extends Module{
 			$this->options['password'] => $this->options['crypt-function']($password),
 		]);
 		$user = $this->model->_Db->select($this->options['table'], $where);
-		if($user){
+		if ($user) {
 			return $this->directLogin($user, $remember);
-		}else{
+		} else {
 			return false;
 		}
 	}
@@ -75,26 +78,27 @@ class User extends Module{
 	 * @param bool $remember
 	 * @return bool|int
 	 */
-	public function directLogin($user, $remember=true){
-		if($this->options['table']===false)
+	public function directLogin($user, bool $remember = true)
+	{
+		if ($this->options['table'] === false)
 			return false;
-		if($this->model->isCLI())
+		if ($this->model->isCLI())
 			$remember = false;
 
 		$n = $this->module_id;
 
-		if(is_numeric($user)){
+		if (is_numeric($user)) {
 			$user = $this->model->_Db->select($this->options['table'], [
 				$this->options['primary'] => $user,
 			]);
-			if(!$user)
+			if (!$user)
 				return false;
 		}
 
-		$_SESSION[SESSION_ID]['user-'.$n] = $user;
-		if($remember){
-			setcookie('user-'.$n, $user[$this->options['primary']], time()+60*60*24*90, PATH);
-			setcookie('password-'.$n, md5($user[$this->options['password']]), time()+60*60*24*90, PATH);
+		$_SESSION[SESSION_ID]['user-' . $n] = $user;
+		if ($remember) {
+			setcookie('user-' . $n, $user[$this->options['primary']], time() + 60 * 60 * 24 * 90, PATH);
+			setcookie('password-' . $n, md5($user[$this->options['password']]), time() + 60 * 60 * 24 * 90, PATH);
 		}
 		return $user[$this->options['primary']];
 	}
@@ -102,15 +106,16 @@ class User extends Module{
 	/**
 	 * @return bool
 	 */
-	public function logout(){
+	public function logout(): bool
+	{
 		$n = $this->module_id;
-		if(isset($_SESSION[SESSION_ID]['user-'.$n]))
-			unset($_SESSION[SESSION_ID]['user-'.$n]);
-		if(!$this->model->isCLI() and (isset($_COOKIE['user-'.$n]) or isset($_COOKIE['password-'.$n]))){
-			setcookie('user-'.$n, '', 0, PATH);
-			setcookie('password-'.$n, '', 0, PATH);
-			unset($_COOKIE['user-'.$n]);
-			unset($_COOKIE['password-'.$n]);
+		if (isset($_SESSION[SESSION_ID]['user-' . $n]))
+			unset($_SESSION[SESSION_ID]['user-' . $n]);
+		if (!$this->model->isCLI() and (isset($_COOKIE['user-' . $n]) or isset($_COOKIE['password-' . $n]))) {
+			setcookie('user-' . $n, '', 0, PATH);
+			setcookie('password-' . $n, '', 0, PATH);
+			unset($_COOKIE['user-' . $n]);
+			unset($_COOKIE['password-' . $n]);
 		}
 		return true;
 	}
@@ -118,27 +123,29 @@ class User extends Module{
 	/**
 	 * @return bool|int
 	 */
-	public function logged(){
+	public function logged()
+	{
 		$n = $this->module_id;
-		return isset($_SESSION[SESSION_ID]['user-'.$n]) ? $_SESSION[SESSION_ID]['user-'.$n][$this->options['primary']] : false;
+		return isset($_SESSION[SESSION_ID]['user-' . $n]) ? $_SESSION[SESSION_ID]['user-' . $n][$this->options['primary']] : false;
 	}
 
 	/**
 	 * @return bool|int
 	 */
-	private function cookieLogin(){
-		if($this->options['table']===false)
+	private function cookieLogin()
+	{
+		if ($this->options['table'] === false)
 			return false;
 		$n = $this->module_id;
 
-		if(!isset($_SESSION[SESSION_ID]['user-'.$n]) and isset($_COOKIE['user-'.$n], $_COOKIE['password-'.$n])){
+		if (!isset($_SESSION[SESSION_ID]['user-' . $n]) and isset($_COOKIE['user-' . $n], $_COOKIE['password-' . $n])) {
 			$where = array_merge($this->options['filters'], [
-				$this->options['primary'] => $_COOKIE['user-'.$n],
+				$this->options['primary'] => $_COOKIE['user-' . $n],
 			]);
 			$user = $this->model->_Db->select($this->options['table'], $where);
-			if($user and md5($user[$this->options['password']])==$_COOKIE['password-'.$n]){
+			if ($user and md5($user[$this->options['password']]) == $_COOKIE['password-' . $n]) {
 				return $this->directLogin($user, true);
-			}else{
+			} else {
 				$this->logout();
 			}
 		}
@@ -149,14 +156,15 @@ class User extends Module{
 	/**
 	 * @return bool
 	 */
-	public function reload(){
-		if($this->options['table']===false)
+	public function reload(): bool
+	{
+		if ($this->options['table'] === false)
 			return false;
 		$n = $this->module_id;
 
-		if(isset($_SESSION[SESSION_ID]['user-'.$n])){
-			$_SESSION[SESSION_ID]['user-'.$n] = $this->model->_Db->select($this->options['table'], [
-				$this->options['primary'] => $_SESSION[SESSION_ID]['user-'.$n][$this->options['primary']],
+		if (isset($_SESSION[SESSION_ID]['user-' . $n])) {
+			$_SESSION[SESSION_ID]['user-' . $n] = $this->model->_Db->select($this->options['table'], [
+				$this->options['primary'] => $_SESSION[SESSION_ID]['user-' . $n][$this->options['primary']],
 			]);
 		}
 
@@ -167,29 +175,33 @@ class User extends Module{
 	 * @param string $i
 	 * @return mixed
 	 */
-	public function __get($i){
+	public function __get($i)
+	{
 		return $this->get($i);
 	}
 
 	/**
-	 * @param string|bool $i
+	 * @param string|null $i
 	 * @return mixed
 	 */
-	public function get($i=false){
+	public function get(string $i = null)
+	{
 		$n = $this->module_id;
-		if($i===false)
-			return $_SESSION[SESSION_ID]['user-'.$n];
-		elseif(isset($_SESSION[SESSION_ID]['user-'.$n][$i]))
-			return $_SESSION[SESSION_ID]['user-'.$n][$i];
+		if ($i === null)
+			return $_SESSION[SESSION_ID]['user-' . $n];
+		elseif (isset($_SESSION[SESSION_ID]['user-' . $n][$i]))
+			return $_SESSION[SESSION_ID]['user-' . $n][$i];
 		else
 			return null;
 	}
 
 	/**
 	 * @param string $controllerName
+	 * @throws \Exception
 	 */
-	private function checkMandatory($controllerName){
-		if($this->logged())
+	private function checkMandatory(string $controllerName)
+	{
+		if ($this->logged())
 			return;
 
 		$except = $this->options['except'];
@@ -199,11 +211,11 @@ class User extends Module{
 		$controllerName = explode('\\', $controllerName);
 		$controllerName = end($controllerName);
 
-		if($this->options['mandatory'] and !in_array($controllerName, $except)){
-			$redirect = $this->model->prefix().implode('/', $this->model->getRequest());
-			if(!$this->model->isCLI())
+		if ($this->options['mandatory'] and !in_array($controllerName, $except)) {
+			$redirect = $this->model->prefix() . implode('/', $this->model->getRequest());
+			if (!$this->model->isCLI())
 				$redirect = urlencode($redirect);
-			$this->model->redirect($this->model->getUrl($this->options['login-controller']).'?redirect='.$redirect);
+			$this->model->redirect($this->model->getUrl($this->options['login-controller']) . '?redirect=' . $redirect);
 		}
 	}
 }

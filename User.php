@@ -25,6 +25,9 @@ class User extends Module
 			'except' => [],
 			'login-controller' => 'Login',
 			'algorithm-version' => 'new',
+			'old-crypt-function' => function (string $pass): string {
+				return sha1(md5($pass));
+			},
 			'old-verify-function' => function (string $pass, string $hash): bool {
 				return ($hash === sha1(md5($pass)));
 			},
@@ -243,6 +246,27 @@ class User extends Module
 			if (!$this->model->isCLI())
 				$redirect = urlencode($redirect);
 			$this->model->redirect($this->model->getUrl($this->options['login-controller']) . '?redirect=' . $redirect);
+		}
+	}
+
+	/**
+	 * Returns hashed password based on the chosen algorithm
+	 *
+	 * @param string $password
+	 * @return string
+	 */
+	public function crypt(string $password): string
+	{
+		switch ($this->options['algorithm-version']) {
+			case 'old':
+				return $this->options['old-crypt-function']($password);
+				break;
+			case 'new':
+				return $this->options['crypt-function']($password);
+				break;
+			default:
+				$this->model->error('Unrecognized algorithm');
+				break;
 		}
 	}
 }

@@ -12,23 +12,27 @@ class User extends Module
 	 */
 	public function init(array $options)
 	{
-		if (!is_array($options)) {
-			$options = [
-				'table' => $options,
-			];
-		}
-
+		$config = $this->retrieveConfig();
+		$options = array_merge($config, $options);
 		$this->options = array_merge([
 			'table' => 'users',
 			'primary' => 'id',
 			'username' => 'username',
 			'password' => 'password',
+			'old_password' => null,
 			'filters' => [],
 			'mandatory' => false,
 			'except' => [],
 			'login-controller' => 'Login',
-			'crypt-function' => function ($pass) {
-				return sha1(md5($pass));
+			'algorithm-version' => 'new',
+			'old-verify-function' => function (string $pass, string $hash): bool {
+				return ($hash === sha1(md5($pass)));
+			},
+			'crypt-function' => function (string $pass): string {
+				return password_hash($pass, PASSWORD_DEFAULT);
+			},
+			'verify-function' => function (string $pass, string $hash): bool {
+				return password_verify($pass, $hash);
 			},
 		], $options);
 
@@ -63,11 +67,34 @@ class User extends Module
 		$filters = array_merge($this->options['filters'], $filters);
 		$where = array_merge($filters, [
 			$this->options['username'] => $username,
-			$this->options['password'] => $this->options['crypt-function']($password),
 		]);
+
 		$user = $this->model->_Db->select($this->options['table'], $where);
 		if ($user) {
-			return $this->directLogin($user, $remember);
+			$verified = false;
+			switch ($this->options['algorithm-version']) {
+				case 'old':
+					$verified = $this->options['old-verify-function']($password, $user[$this->options['password']]);
+					break;
+				case 'new':
+					if ($this->options['old_password'] and $user[$this->options['old_password']]) {
+						$verified = $this->options['old-verify-function']($password, $user[$this->options['old_password']]);
+						if ($verified) {
+							$new_password = $this->options['crypt-function']($password);
+							$this->model->_Db->update($this->options['table'], $user[$this->options['primary']], [
+								$this->options['password'] => $new_password,
+								$this->options['old_password'] => '',
+							]);
+						}
+					} else {
+						$verified = $this->options['verify-function']($password, $user[$this->options['password']]);
+					}
+					break;
+			}
+			if ($verified)
+				return $this->directLogin($user, $remember);
+			else
+				return false;
 		} else {
 			return false;
 		}

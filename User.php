@@ -128,7 +128,7 @@ class User extends Module
 		$_SESSION[SESSION_ID]['user-' . $n] = $user;
 		if ($remember) {
 			setcookie('user-' . $n, $user[$this->options['primary']], time() + 60 * 60 * 24 * 90, PATH);
-			setcookie('password-' . $n, md5($user[$this->options['password']]), time() + 60 * 60 * 24 * 90, PATH);
+			setcookie('password-' . $n, password_hash($user[$this->options['password']], PASSWORD_DEFAULT), time() + 60 * 60 * 24 * 90, PATH);
 		}
 		return $user[$this->options['primary']];
 	}
@@ -173,7 +173,7 @@ class User extends Module
 				$this->options['primary'] => $_COOKIE['user-' . $n],
 			]);
 			$user = $this->model->_Db->select($this->options['table'], $where);
-			if ($user and md5($user[$this->options['password']]) == $_COOKIE['password-' . $n]) {
+			if ($user and password_verify($user[$this->options['password']], $_COOKIE['password-' . $n])) {
 				return $this->directLogin($user, true);
 			} else {
 				$this->logout();

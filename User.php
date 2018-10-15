@@ -22,6 +22,7 @@ class User extends Module
 			'old_password' => null,
 			'filters' => [],
 			'mandatory' => false,
+			'affected-modules' => ['Router'],
 			'except' => [],
 			'login-controller' => 'Login',
 			'algorithm-version' => 'new',
@@ -241,7 +242,7 @@ class User extends Module
 		$controllerName = explode('\\', $controllerName);
 		$controllerName = end($controllerName);
 
-		if ($this->options['mandatory'] and !in_array($controllerName, $except)) {
+		if ($this->options['mandatory'] and !in_array($controllerName, $except) and in_array($this->model->leadingModule, $this->options['affected-modules'])) {
 			$redirect = $this->model->prefix() . implode('/', $this->model->getRequest());
 			if (!$this->model->isCLI())
 				$redirect = urlencode($redirect);

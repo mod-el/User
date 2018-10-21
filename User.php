@@ -40,13 +40,6 @@ class User extends Module
 			},
 		], $options);
 
-		$this->methods = [
-			'login',
-			'directLogin',
-			'logout',
-			'logged',
-		];
-
 		if (!$this->model->isCLI())
 			$this->cookieLogin();
 

@@ -2,7 +2,9 @@
 	"name": "User",
 	"description": "Login manager",
 	"version": "2.1.1",
-	"dependencies": {},
+	"dependencies": {
+		"Core": ">=2.7.1"
+	},
 	"bind-methods": {
 		"login": "login",
 		"directLogin": "directLogin",

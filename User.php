@@ -230,7 +230,6 @@ class User extends Module
 
 		$except = $this->options['except'];
 		$except[] = $this->options['login-controller'];
-		$except[] = 'Zk';
 
 		$controllerName = explode('\\', $controllerName);
 		$controllerName = end($controllerName);

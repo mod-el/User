@@ -38,9 +38,12 @@ class User extends Module
 			'verify-function' => function (string $pass, string $hash): bool {
 				return password_verify($pass, $hash);
 			},
+			'direct-login' => null,
 		], $options);
 
-		if (!$this->model->isCLI())
+		if ($this->options['direct-login'])
+			$this->directLogin($options['direct-login']);
+		elseif (!$this->model->isCLI())
 			$this->cookieLogin();
 
 		$this->model->on('Core_controllerFound', function ($data) {

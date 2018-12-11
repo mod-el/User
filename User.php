@@ -289,4 +289,74 @@ class User extends Module
 	{
 		return $this->options['password'];
 	}
+
+	/**
+	 * @return array|null
+	 */
+	public function getLoginToken(): ?array
+	{
+		if (!$this->logged())
+			return null;
+
+		$primaryColumn = $this->getPrimaryColumn();
+		$usernameColumn = $this->getUsernameColumn();
+		$passwordColumn = $this->getPasswordColumn();
+
+		$token = json_encode([
+			'id' => $this->get($primaryColumn),
+			'username' => $this->get($usernameColumn),
+			'password' => password_hash($this->get($passwordColumn), PASSWORD_DEFAULT),
+		]);
+
+		if (in_array('aes-256-ctr', openssl_get_cipher_methods())) {
+			$key = $this->getLoginTokenKey();
+			$iv = openssl_random_pseudo_bytes(16);
+			return [
+				'iv' => base64_encode($iv),
+				'token' => openssl_encrypt($token, 'aes-256-ctr', $key, 0, $iv),
+			];
+		} else {
+			$this->model->error('Encryption method unavailable');
+		}
+	}
+
+	public function tokenLogin(array $token): ?int
+	{
+		if (in_array('aes-256-ctr', openssl_get_cipher_methods())) {
+			$key = $this->getLoginTokenKey();
+
+			$decrypted = json_decode(openssl_decrypt($token['token'], 'aes-256-ctr', $key, 0, base64_decode($token['iv'])), true);
+			if (!$decrypted)
+				$this->model->error('Invalid auth token');
+
+			$where = array_merge($this->options['filters'], [
+				$this->options['primary'] => $decrypted['id'],
+				$this->options['username'] => $decrypted['username'],
+			]);
+			$user = $this->model->_Db->select($this->options['table'], $where);
+			if ($user and password_verify($user[$this->options['password']], $decrypted['password'])) {
+				return ($this->directLogin($user, true) ?: null);
+			} else {
+				$this->logout();
+				return null;
+			}
+		} else {
+			$this->model->error('Encryption method unavailable');
+		}
+	}
+
+	/**
+	 * @return string
+	 */
+	private function getLoginTokenKey(): string
+	{
+		if (file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'User' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'token-key.php')) {
+			$key = file_get_contents(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'User' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'token-key.php');
+		} else {
+			$key = $this->model->_RandToken->getToken('user', 64);
+			file_put_contents(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'User' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'token-key.php', $key);
+		}
+
+		return $key;
+	}
 }

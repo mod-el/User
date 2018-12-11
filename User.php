@@ -265,4 +265,28 @@ class User extends Module
 				break;
 		}
 	}
+
+	/**
+	 * @return string
+	 */
+	public function getPrimaryColumn(): string
+	{
+		return $this->options['primary'];
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getUsernameColumn(): string
+	{
+		return $this->options['username'];
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getPasswordColumn(): string
+	{
+		return $this->options['password'];
+	}
 }

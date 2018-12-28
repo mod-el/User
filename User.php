@@ -122,7 +122,7 @@ class User extends Module
 				return false;
 		}
 
-		$_SESSION[SESSION_ID]['user-' . $n] = $user;
+		$_SESSION['user-' . $n] = $user;
 		if ($remember) {
 			setcookie('user-' . $n, $user[$this->options['primary']], time() + 60 * 60 * 24 * 90, PATH);
 			setcookie('password-' . $n, password_hash($user[$this->options['password']], PASSWORD_DEFAULT), time() + 60 * 60 * 24 * 90, PATH);
@@ -136,8 +136,8 @@ class User extends Module
 	public function logout(): bool
 	{
 		$n = $this->module_id;
-		if (isset($_SESSION[SESSION_ID]['user-' . $n]))
-			unset($_SESSION[SESSION_ID]['user-' . $n]);
+		if (isset($_SESSION['user-' . $n]))
+			unset($_SESSION['user-' . $n]);
 		if (!$this->model->isCLI() and (isset($_COOKIE['user-' . $n]) or isset($_COOKIE['password-' . $n]))) {
 			setcookie('user-' . $n, '', 0, PATH);
 			setcookie('password-' . $n, '', 0, PATH);
@@ -153,7 +153,7 @@ class User extends Module
 	public function logged()
 	{
 		$n = $this->module_id;
-		return isset($_SESSION[SESSION_ID]['user-' . $n]) ? $_SESSION[SESSION_ID]['user-' . $n][$this->options['primary']] : false;
+		return isset($_SESSION['user-' . $n]) ? $_SESSION['user-' . $n][$this->options['primary']] : false;
 	}
 
 	/**
@@ -165,7 +165,7 @@ class User extends Module
 			return false;
 		$n = $this->module_id;
 
-		if (!isset($_SESSION[SESSION_ID]['user-' . $n]) and isset($_COOKIE['user-' . $n], $_COOKIE['password-' . $n])) {
+		if (!isset($_SESSION['user-' . $n]) and isset($_COOKIE['user-' . $n], $_COOKIE['password-' . $n])) {
 			$where = array_merge($this->options['filters'], [
 				$this->options['primary'] => $_COOKIE['user-' . $n],
 			]);
@@ -189,9 +189,9 @@ class User extends Module
 			return false;
 		$n = $this->module_id;
 
-		if (isset($_SESSION[SESSION_ID]['user-' . $n])) {
-			$_SESSION[SESSION_ID]['user-' . $n] = $this->model->_Db->select($this->options['table'], [
-				$this->options['primary'] => $_SESSION[SESSION_ID]['user-' . $n][$this->options['primary']],
+		if (isset($_SESSION['user-' . $n])) {
+			$_SESSION['user-' . $n] = $this->model->_Db->select($this->options['table'], [
+				$this->options['primary'] => $_SESSION['user-' . $n][$this->options['primary']],
 			]);
 		}
 
@@ -215,9 +215,9 @@ class User extends Module
 	{
 		$n = $this->module_id;
 		if ($i === null)
-			return $_SESSION[SESSION_ID]['user-' . $n];
-		elseif (isset($_SESSION[SESSION_ID]['user-' . $n][$i]))
-			return $_SESSION[SESSION_ID]['user-' . $n][$i];
+			return $_SESSION['user-' . $n];
+		elseif (isset($_SESSION['user-' . $n][$i]))
+			return $_SESSION['user-' . $n][$i];
 		else
 			return null;
 	}

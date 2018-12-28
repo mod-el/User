@@ -3,7 +3,7 @@
 	"description": "Login manager",
 	"version": "2.2.0",
 	"dependencies": {
-		"Core": ">=2.7.2"
+		"Core": ">=2.8.1"
 	},
 	"bind-methods": {
 		"login": "login",

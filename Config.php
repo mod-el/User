@@ -30,4 +30,9 @@ $config = [
 ');
 		return true;
 	}
+
+	public function getConfigData(): ?array
+	{
+		return [];
+	}
 }

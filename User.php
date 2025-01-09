@@ -5,7 +5,7 @@ use Model\Core\Module;
 class User extends Module
 {
 	/** @var array */
-	public $options = [];
+	public array $options = [];
 
 	/**
 	 * @param array|string $options
@@ -211,7 +211,7 @@ class User extends Module
 	 * @param string|null $i
 	 * @return mixed
 	 */
-	public function get(string $i = null)
+	public function get(?string $i = null): mixed
 	{
 		$n = $this->module_id;
 		if ($i === null)

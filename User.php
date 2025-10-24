@@ -22,8 +22,7 @@ class User extends Module
 			'old_password' => null,
 			'filters' => [],
 			'mandatory' => false,
-			'affected-modules' => ['Router'],
-			'except' => [],
+			'except' => ['Zk'],
 			'login-controller' => 'Login',
 			'algorithm-version' => 'new',
 			'old-crypt-function' => function (string $pass): string {
@@ -226,7 +225,7 @@ class User extends Module
 	 * @param string $controllerName
 	 * @throws \Exception
 	 */
-	private function checkMandatory(string $controllerName)
+	private function checkMandatory(string $controllerName): void
 	{
 		if ($this->logged())
 			return;
@@ -237,7 +236,7 @@ class User extends Module
 		$controllerName = explode('\\', $controllerName);
 		$controllerName = end($controllerName);
 
-		if ($this->options['mandatory'] and !in_array($controllerName, $except) and in_array($this->model->leadingModule, $this->options['affected-modules'])) {
+		if ($this->options['mandatory'] and !in_array($controllerName, $except)) {
 			$redirect = $this->model->prefix() . implode('/', $this->model->getRequest());
 			if (!$this->model->isCLI())
 				$redirect = urlencode($redirect);
